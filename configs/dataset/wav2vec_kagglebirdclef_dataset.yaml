@@ -1,4 +1,4 @@
-_target_: src.datasets.huggingface_dataset.DACONBirdImageDataset
+_target_: src.datasets.wav2vec_dataset.KaggleBirdClefDataset
 data_path: ${connected_dir}/data
 split: ${split.train}
 split_ratio: ${split_ratio}

@@ -1,6 +1,6 @@
 # @package _global_
 defaults:
-  - dataset: huggingface_daconbirdimage_dataset
+  - dataset: wav2vec_kagglebirdclef_dataset
   - architecture: huggingface_architecture
   - tuner: huggingface_tuner
   - logger: wandb
@@ -8,8 +8,8 @@ defaults:
   - callbacks: callbacks
   - trainer: trainer
 
-package_name: dacon-bird
-project_dir: /home/ddang/${package_name}
+package_name: kaggle-bird-clef-2024
+project_dir: /home/ubuntu/${package_name}
 connected_dir: /data/${package_name}
 
 seed: 2024
@@ -39,16 +39,16 @@ tracking_direction: max
 patience: 3
 min_delta: 0
 
-devices: 4
+devices: 1
 accelerator: gpu
-strategy: ddp
+strategy: auto
 log_every_n_steps: 10
 precision: 32
 accumulate_grad_batches: 1
 epoch: 100
 
 model_name: HuggingFace
-dataset_name: DACONBirdImage
+dataset_name: KaggleBirdClef2024
 mode: train
 
 is_tuned: tuned
