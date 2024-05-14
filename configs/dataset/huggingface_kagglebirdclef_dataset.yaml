@@ -1,4 +1,4 @@
-_target_: src.datasets.wav2vec_dataset.KaggleBirdClefDataset
+_target_: src.datasets.huggingface_dataset.KaggleBirdClefDataset
 data_path: ${connected_dir}/data
 split: ${split.train}
 split_ratio: ${split_ratio}
@@ -6,8 +6,13 @@ seed: ${seed}
 target_column_name: ${target_column_name}
 num_devices: ${devices}
 batch_size: ${batch_size}
+preprocess_type: ${preprocess_type}
 pretrained_model_name: ${pretrained_model_name}
-image_size: 256
+sampling_rate: ${sampling_rate}
+n_fft: ${n_fft}
+hop_length: ${hop_length}
+spectogram_size: ${spectogram_size}
 augmentation_probability: 0.001
 augmentations:
   - noise
+max_length: ${max_length}

@@ -1,6 +1,6 @@
 # @package _global_
 defaults:
-  - dataset: wav2vec_kagglebirdclef_dataset
+  - dataset: huggingface_kagglebirdclef_dataset
   - architecture: huggingface_architecture
   - tuner: huggingface_tuner
   - logger: wandb
@@ -14,7 +14,7 @@ connected_dir: /data/${package_name}
 
 seed: 2024
 
-num_labels: 25
+num_labels: 182
 
 split:
   train: train
@@ -26,9 +26,15 @@ batch_size: 24
 
 split_ratio: 0.1
 target_column_name: label
-upload_user: microsoft
-model_type: swinv2-large-patch4-window12to16-192to256-22kto1k-ft
+preprocess_type: spectogram
+upload_user: timm
+model_type: efficientnet_b3.ra2_in1k
 pretrained_model_name: ${upload_user}/${model_type}
+sampling_rate: 16000
+n_fft: 500
+hop_length: 50
+spectogram_size: 256
+max_length: 10000
 
 lr: 0.00002
 t_max: 50

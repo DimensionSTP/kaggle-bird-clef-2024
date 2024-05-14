@@ -3,22 +3,36 @@ from typing import Dict
 import torch
 from torch import nn
 
-from transformers import AutoModelForImageClassification
+from transformers import (
+    AutoModelForImageClassification,
+    AutoModelForSequenceClassification,
+)
 
 
 class HuggingFaceModel(nn.Module):
     def __init__(
         self,
+        preprocess_type: str,
         pretrained_model_name: str,
         num_labels: int,
     ) -> None:
         super().__init__()
-        self.model = AutoModelForImageClassification.from_pretrained(
-            pretrained_model_name,
-            num_labels=num_labels,
-            output_hidden_states=False,
-            ignore_mismatched_sizes=True,
-        )
+        if preprocess_type == "spectogram":
+            self.model = AutoModelForImageClassification.from_pretrained(
+                pretrained_model_name,
+                num_labels=num_labels,
+                output_hidden_states=False,
+                ignore_mismatched_sizes=True,
+            )
+        elif preprocess_type == "vectorize":
+            self.model = AutoModelForSequenceClassification.from_pretrained(
+                pretrained_model_name,
+                num_labels=num_labels,
+                output_hidden_states=False,
+                ignore_mismatched_sizes=True,
+            )
+        else:
+            raise ValueError(f"Invalid preprocess_type: {preprocess_type}.")
 
     def forward(
         self,

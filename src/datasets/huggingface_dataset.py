@@ -3,13 +3,13 @@ import joblib
 
 import numpy as np
 import pandas as pd
-from PIL import Image
+import librosa
 from sklearn.model_selection import train_test_split
 
 import torch
 from torch.utils.data import Dataset
 
-from transformers import AutoImageProcessor
+from transformers import AutoImageProcessor, AutoFeatureExtractor
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
@@ -25,10 +25,15 @@ class KaggleBirdClefDataset(Dataset):
         target_column_name: str,
         num_devices: int,
         batch_size: int,
+        preprocess_type: str,
         pretrained_model_name: str,
-        image_size: int,
+        sampling_rate: int,
+        n_fft: int,
+        hop_length: int,
+        spectogram_size: int,
         augmentation_probability: float,
         augmentations: List[str],
+        max_length: int,
     ) -> None:
         self.data_path = data_path
         self.split = split
@@ -37,16 +42,28 @@ class KaggleBirdClefDataset(Dataset):
         self.target_column_name = target_column_name
         self.num_devices = num_devices
         self.batch_size = batch_size
-        self.data_encoder = AutoImageProcessor.from_pretrained(
-            pretrained_model_name,
-        )
+        self.preprocess_type = preprocess_type
+        if self.preprocess_type == "spectogram":
+            self.data_encoder = AutoImageProcessor.from_pretrained(
+                pretrained_model_name,
+            )
+        elif self.preprocess_type == "vectorize":
+            self.data_encoder = AutoFeatureExtractor.from_pretrained(
+                pretrained_model_name,
+            )
+        else:
+            raise ValueError(f"Invalid preprocess_type: {self.preprocess_type}.")
         dataset = self.get_dataset()
         self.datas = dataset["datas"]
         self.labels = dataset["labels"]
-        self.image_size = image_size
+        self.sampling_rate = sampling_rate
+        self.n_fft = n_fft
+        self.hop_length = hop_length
+        self.spectogram_size = spectogram_size
         self.augmentation_probability = augmentation_probability
         self.augmentations = augmentations
         self.transform = self.get_transform()
+        self.max_length = max_length
 
     def __len__(self) -> int:
         return len(self.labels)
@@ -55,9 +72,17 @@ class KaggleBirdClefDataset(Dataset):
         self,
         idx: int,
     ) -> Dict[str, Any]:
-        data = np.array(Image.open(self.datas[idx]).convert("RGB"))
-        data = self.transform(image=data)["image"]
-        encoded = self.encode_image(data)
+        data = librosa.load(
+            self.datas[idx],
+            sr=self.sampling_rate,
+        )[0]
+        if self.preprocess_type == "spectogram":
+            stft = librosa.stft(data, n_fft=self.n_fft, hop_length=self.hop_length)
+            spectrogram = librosa.amplitude_to_db(np.abs(stft))
+            data = self.transform(image=spectrogram)["image"]
+            encoded = self.encode_spectogram(data)
+        else:
+            encoded = self.encode_audio(data)
         encoded["labels"] = torch.tensor(
             [self.labels[idx]],
             dtype=torch.long,
@@ -111,22 +136,23 @@ class KaggleBirdClefDataset(Dataset):
 
         if self.split == "train":
             datas = [
-                f"{self.data_path}/{file_name[2:]}"
-                for file_name in data["upscale_img_path"]
+                f"{self.data_path}/train_audio/{file_name}"
+                for file_name in data["audio_path"]
             ]
         elif self.split == "val":
             datas = [
-                f"{self.data_path}/{file_name[2:]}"
-                for file_name in data["upscale_img_path"]
+                f"{self.data_path}/train_audio/{file_name}"
+                for file_name in data["audio_path"]
             ]
         elif self.split == "test":
             datas = [
-                f"{self.data_path}/{self.split}/{file_name}.jpg"
-                for file_name in data["id"]
+                f"{self.data_path}/test_soundscapes/{file_name}"
+                for file_name in data["audio_path"]
             ]
         else:
             datas = [
-                f"{self.data_path}/test/{file_name}.jpg" for file_name in data["id"]
+                f"{self.data_path}/test_soundscapes/{file_name}"
+                for file_name in data["audio_path"]
             ]
         str_labels = data[self.target_column_name].tolist()
         label_encoder = joblib.load(f"{self.data_path}/label_encoder.pkl")
@@ -138,7 +164,9 @@ class KaggleBirdClefDataset(Dataset):
 
     def get_transform(self) -> A.Compose:
         transforms = [
-            A.Resize(width=self.image_size, height=self.image_size, interpolation=2),
+            A.Resize(
+                width=self.spectogram_size, height=self.spectogram_size, interpolation=2
+            ),
         ]
         if self.split in ["train", "val"]:
             for aug in self.augmentations:
@@ -194,12 +222,27 @@ class KaggleBirdClefDataset(Dataset):
             transforms.append(ToTensorV2())
             return A.Compose(transforms)
 
-    def encode_image(
+    def encode_spectogram(
         self,
         data: np.ndarray,
     ) -> Dict[str, torch.Tensor]:
         encoded = self.data_encoder(
             data,
+            return_tensors="pt",
+        )
+        encoded = {k: v.squeeze(0) for k, v in encoded.items()}
+        return encoded
+
+    def encode_audio(
+        self,
+        data: np.ndarray,
+    ) -> Dict[str, torch.Tensor]:
+        encoded = self.data_encoder(
+            data,
+            sampling_rate=self.sampling_rate,
+            max_length=self.max_length,
+            padding="max_length",
+            truncation=True,
             return_tensors="pt",
         )
         encoded = {k: v.squeeze(0) for k, v in encoded.items()}

@@ -2,6 +2,7 @@ _target_: src.architectures.huggingface_architecture.HuggingFaceArchitecture
 
 model:
   _target_: src.architectures.models.huggingface_model.HuggingFaceModel
+  preprocess_type: ${preprocess_type}
   pretrained_model_name: ${pretrained_model_name}
   num_labels: ${num_labels}
 
