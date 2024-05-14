@@ -4,7 +4,7 @@ defaults:
 run_name: soft_voting
 work_dir: ${hydra:runtime.cwd}
 
-basic_path: /data/dacon-bird
+basic_path: /data/kaggle-bird-clef-2024
 voted_name: soft_voting
 
 voted_logit: ${basic_path}/logits/${voted_name}.npy
