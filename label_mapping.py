@@ -3,7 +3,7 @@ from sklearn.preprocessing import LabelEncoder
 import joblib
 
 
-path = "/data/dacon-bird/data"
+path = "/data/kaggle-bird-clef-2024/data"
 
 df = pd.read_csv(f"/{path}/train.csv")
 labels = df["label"].unique()
