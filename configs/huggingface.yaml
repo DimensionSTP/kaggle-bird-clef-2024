@@ -27,8 +27,8 @@ batch_size: 24
 split_ratio: 0.1
 target_column_name: label
 preprocess_type: spectogram
-upload_user: timm
-model_type: efficientnet_b3.ra2_in1k
+upload_user: microsoft
+model_type: beit-base-patch16-224-pt22k-ft22k
 pretrained_model_name: ${upload_user}/${model_type}
 sampling_rate: 16000
 n_fft: 500
