@@ -1,16 +1,16 @@
-# Basic DL pipeline for CV competition
+# Basic DL pipeline for Audio classification competition
 
-## For DACON CV competition
+## For Kaggle Audio classification competition
 
 ### Dataset
-DACON CV competition dataset(bird image classification)
+Kaggle BirdClef 2024 dataset(bird audio classification)
 
 ### Quick setup
 
 ```bash
 # clone project
-git clone https://github.com/DimensionSTP/dacon-bird.git
-cd upstage-cv
+git clone https://github.com/DimensionSTP/kaggle-bird-clef-2024.git
+cd kaggle-bird-clef-2024
 
 # [OPTIONAL] create conda environment
 conda create -n myenv python=3.8
