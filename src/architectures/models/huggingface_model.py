@@ -5,7 +5,7 @@ from torch import nn
 
 from transformers import (
     AutoModelForImageClassification,
-    AutoModelForSequenceClassification,
+    Wav2Vec2ForSequenceClassification,
 )
 
 
@@ -25,7 +25,7 @@ class HuggingFaceModel(nn.Module):
                 ignore_mismatched_sizes=True,
             )
         elif preprocess_type == "vectorize":
-            self.model = AutoModelForSequenceClassification.from_pretrained(
+            self.model = Wav2Vec2ForSequenceClassification.from_pretrained(
                 pretrained_model_name,
                 num_labels=num_labels,
                 output_hidden_states=False,

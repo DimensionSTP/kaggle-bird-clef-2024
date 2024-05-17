@@ -135,25 +135,13 @@ class KaggleBirdClefDataset(Dataset):
             raise ValueError(f"Inavalid split: {self.split}")
 
         if self.split == "train":
-            datas = [
-                f"{self.data_path}/train_audio/{file_name}"
-                for file_name in data["audio_path"]
-            ]
+            datas = [file_path for file_path in data["audio_path"]]
         elif self.split == "val":
-            datas = [
-                f"{self.data_path}/train_audio/{file_name}"
-                for file_name in data["audio_path"]
-            ]
+            datas = [file_path for file_path in data["audio_path"]]
         elif self.split == "test":
-            datas = [
-                f"{self.data_path}/test_soundscapes/{file_name}"
-                for file_name in data["audio_path"]
-            ]
+            datas = [file_path for file_path in data["audio_path"]]
         else:
-            datas = [
-                f"{self.data_path}/test_soundscapes/{file_name}"
-                for file_name in data["audio_path"]
-            ]
+            datas = [file_path for file_path in data["audio_path"]]
         str_labels = data[self.target_column_name].tolist()
         label_encoder = joblib.load(f"{self.data_path}/label_encoder.pkl")
         labels = label_encoder.transform(str_labels)
