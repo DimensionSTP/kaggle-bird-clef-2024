@@ -18,7 +18,7 @@ def read_file(
         )
         print(f"found {len(audio_paths)} file in train_audios/{category} folder.")
         for audio in audio_paths:
-            audios.append(audio.split("/")[-1])
+            audios.append(audio)
             categories.append(category)
     print(f"total {len(audios)} file in audios folder.")
     return {
