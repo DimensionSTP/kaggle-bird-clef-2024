@@ -11,7 +11,7 @@ epochs="9 10"
 
 for epoch in $epochs
 do
-    python main.py mode=train \
+    python main.py mode=predict \
         is_tuned=$is_tuned \
         strategy=$strategy \
         preprocess_type=$preprocess_type \
@@ -32,7 +32,7 @@ epochs="9 10"
 
 for epoch in $epochs
 do
-    python main.py mode=train \
+    python main.py mode=predict \
         is_tuned=$is_tuned \
         strategy=$strategy \
         preprocess_type=$preprocess_type \
@@ -53,7 +53,7 @@ epochs="9 10"
 
 for epoch in $epochs
 do
-    python main.py mode=train \
+    python main.py mode=predict \
         is_tuned=$is_tuned \
         strategy=$strategy \
         preprocess_type=$preprocess_type \
@@ -74,7 +74,7 @@ epochs="9 10"
 
 for epoch in $epochs
 do
-    python main.py mode=train \
+    python main.py mode=predict \
         is_tuned=$is_tuned \
         strategy=$strategy \
         preprocess_type=$preprocess_type \
