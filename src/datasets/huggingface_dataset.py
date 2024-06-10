@@ -11,9 +11,6 @@ from torch.utils.data import Dataset
 
 from transformers import AutoImageProcessor, AutoFeatureExtractor
 
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-
 
 class KaggleBirdClefDataset(Dataset):
     def __init__(
@@ -25,15 +22,11 @@ class KaggleBirdClefDataset(Dataset):
         target_column_name: str,
         num_devices: int,
         batch_size: int,
-        preprocess_type: str,
-        pretrained_model_name: str,
         sampling_rate: int,
-        n_fft: int,
-        hop_length: int,
-        spectogram_size: int,
-        augmentation_probability: float,
-        augmentations: List[str],
+        num_mels: int,
         max_length: int,
+        pretrained_model_name: str,
+        preprocess_type: str,
     ) -> None:
         self.data_path = data_path
         self.split = split
@@ -42,28 +35,33 @@ class KaggleBirdClefDataset(Dataset):
         self.target_column_name = target_column_name
         self.num_devices = num_devices
         self.batch_size = batch_size
+        self.sampling_rate = sampling_rate
+        self.num_mels = num_mels
+        self.max_length = max_length
+        self.pretrained_model_name = pretrained_model_name
         self.preprocess_type = preprocess_type
-        if self.preprocess_type == "spectogram":
-            self.data_encoder = AutoImageProcessor.from_pretrained(
-                pretrained_model_name,
-            )
-        elif self.preprocess_type == "vectorize":
+        if "timm" in self.pretrained_model_name:
+            self.data_encoder = None
+        elif "ast" in self.pretrained_model_name:
             self.data_encoder = AutoFeatureExtractor.from_pretrained(
-                pretrained_model_name,
+                self.pretrained_model_name,
+                sampling_rate=self.sampling_rate,
+                num_mel_bins=self.num_mels,
             )
         else:
-            raise ValueError(f"Invalid preprocess_type: {self.preprocess_type}.")
+            if self.preprocess_type == "spectogram":
+                self.data_encoder = AutoImageProcessor.from_pretrained(
+                    self.pretrained_model_name,
+                )
+            elif self.preprocess_type == "vectorize":
+                self.data_encoder = AutoFeatureExtractor.from_pretrained(
+                    self.pretrained_model_name,
+                )
+            else:
+                raise ValueError(f"Invalid preprocess_type: {self.preprocess_type}.")
         dataset = self.get_dataset()
         self.datas = dataset["datas"]
         self.labels = dataset["labels"]
-        self.sampling_rate = sampling_rate
-        self.n_fft = n_fft
-        self.hop_length = hop_length
-        self.spectogram_size = spectogram_size
-        self.augmentation_probability = augmentation_probability
-        self.augmentations = augmentations
-        self.transform = self.get_transform()
-        self.max_length = max_length
 
     def __len__(self) -> int:
         return len(self.labels)
@@ -76,13 +74,42 @@ class KaggleBirdClefDataset(Dataset):
             self.datas[idx],
             sr=self.sampling_rate,
         )[0]
-        if self.preprocess_type == "spectogram":
-            stft = librosa.stft(data, n_fft=self.n_fft, hop_length=self.hop_length)
-            spectrogram = librosa.amplitude_to_db(np.abs(stft))
-            data = self.transform(image=spectrogram)["image"]
-            encoded = self.encode_spectogram(data)
+        mel_spectogram = librosa.feature.melspectrogram(
+            y=data,
+            sr=self.sampling_rate,
+            n_mels=self.num_mels,
+        )
+        mel_spectogram_db = librosa.power_to_db(
+            mel_spectogram,
+            ref=np.max,
+        )
+        mel_spectogram_db = (mel_spectogram_db - mel_spectogram_db.min()) / (
+            mel_spectogram_db.max() - mel_spectogram_db.min()
+        )
+        if mel_spectogram_db.shape[1] > self.max_length:
+            mel_spectogram_db = mel_spectogram_db[:, : self.max_length]
         else:
-            encoded = self.encode_audio(data)
+            padding = self.max_length - mel_spectogram_db.shape[1]
+            mel_spectogram_db = np.pad(
+                mel_spectogram_db,
+                (
+                    (0, 0),
+                    (0, padding),
+                ),
+                mode="constant",
+            )
+        spectogram = torch.tensor(mel_spectogram_db).unsqueeze(0)
+        spectogram = spectogram.repeat(3, 1, 1)
+        if "timm" in self.pretrained_model_name:
+            encoded = {}
+            encoded["encoded"] = spectogram
+        elif "ast" in self.pretrained_model_name:
+            encoded = self.encode_ast(data)
+        else:
+            if self.preprocess_type == "spectogram":
+                encoded = self.encode_spectogram(spectogram)
+            else:
+                encoded = self.encode_audio(data)
         encoded["labels"] = torch.tensor(
             [self.labels[idx]],
             dtype=torch.long,
@@ -150,65 +177,17 @@ class KaggleBirdClefDataset(Dataset):
             "labels": labels,
         }
 
-    def get_transform(self) -> A.Compose:
-        transforms = [
-            A.Resize(
-                width=self.spectogram_size, height=self.spectogram_size, interpolation=2
-            ),
-        ]
-        if self.split in ["train", "val"]:
-            for aug in self.augmentations:
-                if aug == "rotate30":
-                    transforms.append(
-                        A.Rotate(
-                            limit=[30, 30],
-                            p=self.augmentation_probability,
-                        )
-                    )
-                elif aug == "rotate45":
-                    transforms.append(
-                        A.Rotate(
-                            limit=[45, 45],
-                            p=self.augmentation_probability,
-                        )
-                    )
-                elif aug == "rotate90":
-                    transforms.append(
-                        A.Rotate(
-                            limit=[90, 90],
-                            p=self.augmentation_probability,
-                        )
-                    )
-                elif aug == "hflip":
-                    transforms.append(
-                        A.HorizontalFlip(
-                            p=self.augmentation_probability,
-                        )
-                    )
-                elif aug == "vflip":
-                    transforms.append(
-                        A.VerticalFlip(
-                            p=self.augmentation_probability,
-                        )
-                    )
-                elif aug == "noise":
-                    transforms.append(
-                        A.GaussNoise(
-                            p=self.augmentation_probability,
-                        )
-                    )
-                elif aug == "blur":
-                    transforms.append(
-                        A.Blur(
-                            blur_limit=7,
-                            p=self.augmentation_probability,
-                        )
-                    )
-            transforms.append(ToTensorV2())
-            return A.Compose(transforms)
-        else:
-            transforms.append(ToTensorV2())
-            return A.Compose(transforms)
+    def encode_ast(
+        self,
+        data: np.ndarray,
+    ) -> Dict[str, torch.Tensor]:
+        encoded = self.data_encoder(
+            data,
+            sampling_rate=self.sampling_rate,
+            return_tensors="pt",
+        )
+        encoded = {k: v.squeeze(0) for k, v in encoded.items()}
+        return encoded
 
     def encode_spectogram(
         self,
