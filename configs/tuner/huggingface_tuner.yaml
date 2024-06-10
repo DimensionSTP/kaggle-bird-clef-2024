@@ -1,7 +1,5 @@
 _target_: src.tuners.huggingface_tuner.HuggingFaceTuner
 hparams:
-  pretrained_model_name:
-    - microsoft/swinv2-large-patch4-window12to16-192to256-22kto1k-ft
   lr:
     low: 0.000005
     high: 0.00005
@@ -16,6 +14,8 @@ hparams:
     log: False
 
 module_params:
+  pretrained_model_name: ${pretrained_model_name}
+  preprocess_type: ${preprocess_type}
   num_labels: ${num_labels}
   average: macro
   interval: step
