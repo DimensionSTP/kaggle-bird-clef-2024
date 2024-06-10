@@ -6,13 +6,8 @@ seed: ${seed}
 target_column_name: ${target_column_name}
 num_devices: ${devices}
 batch_size: ${batch_size}
-preprocess_type: ${preprocess_type}
-pretrained_model_name: ${pretrained_model_name}
 sampling_rate: ${sampling_rate}
-n_fft: ${n_fft}
-hop_length: ${hop_length}
-spectogram_size: ${spectogram_size}
-augmentation_probability: 0.001
-augmentations:
-  - noise
+num_mels: ${num_mels}
 max_length: ${max_length}
+pretrained_model_name: ${pretrained_model_name}
+preprocess_type: ${preprocess_type}
