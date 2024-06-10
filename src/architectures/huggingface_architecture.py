@@ -2,6 +2,7 @@ from typing import Dict, Any
 
 import torch
 from torch import optim, nn
+from torch.nn import functional as F
 from torchmetrics import MetricCollection, F1Score, Accuracy
 
 from lightning.pytorch import LightningModule
@@ -15,6 +16,7 @@ class HuggingFaceArchitecture(LightningModule):
         model: nn.Module,
         num_labels: int,
         average: str,
+        pretrained_model_name: str,
         strategy: str,
         lr: float,
         period: int,
@@ -23,6 +25,7 @@ class HuggingFaceArchitecture(LightningModule):
     ) -> None:
         super().__init__()
         self.model = model
+        self.pretrained_model_name = pretrained_model_name
         self.strategy = strategy
         self.lr = lr
         self.period = period
@@ -73,12 +76,23 @@ class HuggingFaceArchitecture(LightningModule):
             encoded=encoded,
             mode=mode,
         )
-        logit = output.logits
-        pred = torch.argmax(
-            logit,
-            dim=-1,
-        )
-        loss = output.loss
+        if "timm" in self.pretrained_model_name:
+            logit = output
+            pred = torch.argmax(
+                logit,
+                dim=-1,
+            )
+            loss = F.cross_entropy(
+                logit,
+                label,
+            )
+        else:
+            logit = output.logits
+            pred = torch.argmax(
+                logit,
+                dim=-1,
+            )
+            loss = output.loss
         return {
             "loss": loss,
             "logit": logit,
