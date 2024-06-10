@@ -73,11 +73,6 @@ class HuggingFaceTuner:
 
         params = dict()
         params["seed"] = self.seed
-        if self.hparams.pretrained_model_name:
-            params["pretrained_model_name"] = trial.suggest_categorical(
-                name="pretrained_model_name",
-                choices=self.hparams.pretrained_model_name,
-            )
         if self.hparams.lr:
             params["lr"] = trial.suggest_float(
                 name="lr",
@@ -101,13 +96,15 @@ class HuggingFaceTuner:
             )
 
         model = HuggingFaceModel(
-            pretrained_model_name=params["pretrained_model_name"],
+            pretrained_model_name=self.module_params.pretrained_model_name,
+            preprocess_type=self.module_params.preprocess_type,
             num_labels=self.module_params.num_labels,
         )
         architecture = HuggingFaceArchitecture(
             model=model,
             num_labels=self.module_params.num_labels,
             average=self.module_params.average,
+            pretrained_model_name=self.module_params.pretrained_model_name,
             strategy=self.module_params.strategy,
             lr=params["lr"],
             period=params["period"],
