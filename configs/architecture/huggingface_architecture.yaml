@@ -2,14 +2,15 @@ _target_: src.architectures.huggingface_architecture.HuggingFaceArchitecture
 
 model:
   _target_: src.architectures.models.huggingface_model.HuggingFaceModel
-  preprocess_type: ${preprocess_type}
   pretrained_model_name: ${pretrained_model_name}
+  preprocess_type: ${preprocess_type}
   num_labels: ${num_labels}
 
 num_labels: ${num_labels}
 average: macro
+pretrained_model_name: ${pretrained_model_name}
 strategy: ${strategy}
 lr: ${lr}
-t_max: ${t_max}
 period: ${period}
+eta_min: ${eta_min}
 interval: step
