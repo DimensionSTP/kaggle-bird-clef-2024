@@ -37,4 +37,3 @@ direction: maximize
 seed: ${seed}
 num_trials: ${num_trials}
 hparams_save_path: ${hparams_save_path}
-monitor: ${monitor}
