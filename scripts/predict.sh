@@ -18,7 +18,8 @@ do
         upload_user=$upload_user \
         model_type=$model_type \
         precision=$precision \
-        batch_size=$batch_size
+        batch_size=$batch_size \
+        epoch=$epoch
 done
 
 is_tuned="untuned"
@@ -39,7 +40,8 @@ do
         upload_user=$upload_user \
         model_type=$model_type \
         precision=$precision \
-        batch_size=$batch_size
+        batch_size=$batch_size \
+        epoch=$epoch
 done
 
 is_tuned="untuned"
@@ -60,7 +62,8 @@ do
         upload_user=$upload_user \
         model_type=$model_type \
         precision=$precision \
-        batch_size=$batch_size
+        batch_size=$batch_size \
+        epoch=$epoch
 done
 
 is_tuned="untuned"
@@ -81,5 +84,6 @@ do
         upload_user=$upload_user \
         model_type=$model_type \
         precision=$precision \
-        batch_size=$batch_size
+        batch_size=$batch_size \
+        epoch=$epoch
 done
