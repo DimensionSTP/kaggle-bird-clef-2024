@@ -72,5 +72,9 @@ submission_file_name: sample_submission
 logit_name: ${save_detail}-epoch=${epoch}
 submission_name: ${save_detail}-epoch=${epoch}
 
+user_name: ${oc.env:USER_NAME}
+upload_tag: bird-sounds
+num_safetensors: 2
+
 run_name: ${project_name}
 work_dir: ${hydra:runtime.cwd}
