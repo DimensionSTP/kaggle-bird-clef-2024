@@ -74,6 +74,7 @@ logit_name: ${save_detail}-epoch=${epoch}
 submission_name: ${save_detail}-epoch=${epoch}
 
 user_name: ${oc.env:USER_NAME}
+model_detail: beit-base-patch16-224-pt22k-ft22k
 upload_tag: bird-sounds
 num_safetensors: 2
 
